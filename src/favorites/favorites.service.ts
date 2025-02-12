@@ -1,28 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
-import { UpdateFavoriteDto } from './dto/update-favorite.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateFavoriteDto } from "./dto/create-favorite.dto";
+import { UpdateFavoriteDto } from "./dto/update-favorite.dto";
 
 @Injectable()
 export class FavoritesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createFavoriteDto: CreateFavoriteDto) {
     const { userId, toolId } = createFavoriteDto;
 
-    const toolExists = await this.prisma.tool.findUnique({ where: { id: toolId } });
+    const toolExists = await this.prisma.tool.findUnique({
+      where: { id: toolId },
+    });
 
     if (!toolExists) {
-      throw new Error('Tool not found');
+      throw new Error("Tool not found");
     }
 
     return this.prisma.favorite.create({
       data: { userId, toolId },
     });
-  }
-
-  findAll() {
-    return this.prisma.favorite.findMany();
   }
 
   findOne(id: string) {
@@ -37,6 +35,13 @@ export class FavoritesService {
       },
     });
     return { isFavorite: !!favorite };
+  }
+
+  async getFavoritesByUserId(userId: string) {
+    return this.prisma.favorite.findMany({
+      where: { userId: parseInt(userId) },
+      include: { tool: true },
+    });
   }
 
   async toggleFavorite(userId: number, toolId: string) {
